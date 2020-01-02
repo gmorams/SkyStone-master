@@ -1,4 +1,6 @@
-/**
+ext {
+    var = '3.5.2'
+} /**
  * Top-level build file for ftc_app project.
  *
  * It is extraordinarily rare that you will ever need to edit this file.
@@ -9,7 +11,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.4.1'
+        classpath "com.android.tools.build:gradle:3.5.2"
     }
 }
 

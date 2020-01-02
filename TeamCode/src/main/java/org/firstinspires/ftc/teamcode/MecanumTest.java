@@ -67,13 +67,16 @@ public class MecanumTest extends LinearOpMode {
     /* Declare OpMode members. */
     static final double     COUNTS_PER_MOTOR_REV    = 537.6 ;    // eg: TETRIX Motor Encoder
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // This is < 1.0 if geared UP
-    static final double     WHEEL_DIAMETER_CM   = 0.5 ;     // For figuring circumference
+    static final double     WHEEL_DIAMETER_CM   = 10.0 ;     // For figuring circumference
     static final double     COUNTS_PER_CM  = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
                                                       (WHEEL_DIAMETER_CM * 3.1415);
     static final double     DRIVE_SPEED             = 0.6;
     static final double     TURN_SPEED              = 0.5;
 
     private DcMotor frontLeftMotor = null;
+    private DcMotor backLeftMotor = null;
+    private DcMotor frontRightMotor = null;
+    private DcMotor backRightMotor = null;
 
     @Override
     public void runOpMode() {
@@ -83,28 +86,42 @@ public class MecanumTest extends LinearOpMode {
         telemetry.update();
 
         frontLeftMotor = hardwareMap.get(DcMotor.class, "front_left_drive");
+        backLeftMotor = hardwareMap.get(DcMotor.class, "front_right_drive");
+        frontRightMotor = hardwareMap.get(DcMotor.class, "back_left_drive");
+        backRightMotor = hardwareMap.get(DcMotor.class, "front_right_drive");
 
         frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
         frontLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
 
         frontLeftMotor.setDirection(DcMotor.Direction.REVERSE);
+        backLeftMotor.setDirection(DcMotor.Direction.REVERSE);
+        frontRightMotor.setDirection(DcMotor.Direction.FORWARD);
+        backRightMotor.setDirection(DcMotor.Direction.FORWARD);
 
         // Send telemetry message to indicate successful Encoder reset
-        // Ho hem comentat perque el %7d no es correcte
-        /*telemetry.addData("Path0",  "Starting at %7d :%7d",
-                        frontLeftMotor.getCurrentPosition());
+        telemetry.addData("Path0",  "Starting at %7d :%7d",
+                frontLeftMotor.getCurrentPosition(),
+                backLeftMotor.getCurrentPosition(),
+                frontRightMotor.getCurrentPosition(),
+                backRightMotor.getCurrentPosition());
         telemetry.update();
-*/
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
 
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
-        encoderDrive(0.5, 5);
-        encoderDrive(0.5, -5);
+        encoderDrive(0.5, 5, 90);
+        encoderDrive(0.5, -5, 90);
 
        /* robot.leftClaw.setPosition(1.0);            // S4: Stop and close the claw.
         robot.rightClaw.setPosition(0.0);*/
@@ -123,11 +140,37 @@ public class MecanumTest extends LinearOpMode {
 //     *  3) Driver stops the opmode running.
 
     public void encoderDrive(double speed,
-                             double distance) {
+                             double distance,
+                             double angle) {    //timeout eliminated
         int distanceXTarget;
+        int distanceYTarget;
 
-        double distXMotors = distance;
-        double powerYMotors = speed;
+        double distXMotors;
+        double distYMotors;
+
+        double powerXMotors;
+        double powerYMotors;
+        //first quadrant
+        distXMotors = distance * Math.cos(Math.toRadians(angle)); //optional: -45
+        distYMotors = distance * Math.sin(Math.toRadians(angle)); //optional: -45
+
+        if(angle > 0 && angle <= 90){
+            powerXMotors = 1;
+            powerYMotors = Math.sin(Math.toRadians(angle)) - Math.cos(Math.toRadians(angle));
+        }
+        else if(angle > 90 && angle <= 180){
+            powerXMotors = Math.sin(Math.toRadians(angle)) + Math.cos(Math.toRadians(angle));
+            powerYMotors = 1;
+        }
+        else if(angle > 180 && angle <= 270){
+            powerXMotors = -1;
+            powerYMotors = Math.sin(Math.toRadians(angle)) - Math.cos(Math.toRadians(angle));
+        }
+        else {
+            powerXMotors = Math.sin(Math.toRadians(angle)) + Math.cos(Math.toRadians(angle));
+            powerYMotors = -1;
+        }
+
 
         // Ensure that the opmode is still active
         if (opModeIsActive()) {
@@ -135,15 +178,25 @@ public class MecanumTest extends LinearOpMode {
             // Determine new target position, and pass to motor controller
 
             distanceXTarget = frontLeftMotor.getCurrentPosition() + (int)(distXMotors * COUNTS_PER_CM);
+            distanceYTarget = frontLeftMotor.getCurrentPosition() + (int)(distXMotors * COUNTS_PER_CM);
 
 
-            frontLeftMotor.setTargetPosition(distanceXTarget); //canviat de Y a X per comoditat
+            frontLeftMotor.setTargetPosition(distanceYTarget);
+            backLeftMotor.setTargetPosition(distanceXTarget);
+            frontRightMotor.setTargetPosition(distanceXTarget);
+            backRightMotor.setTargetPosition(distanceYTarget);
             // Turn On RUN_TO_POSITION
             frontLeftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            backLeftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            frontRightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            backRightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             // reset the timeout time and start motion.
             //  runtime.reset();
             frontLeftMotor.setPower(powerYMotors);
+            backLeftMotor.setPower(powerYMotors);
+            frontRightMotor.setPower(powerYMotors);
+            backRightMotor.setPower(powerXMotors);
 
             // keep looping while we are still active, and there is time left, and both motors are running.
             // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
@@ -151,7 +204,7 @@ public class MecanumTest extends LinearOpMode {
             // always end the motion as soon as possible.
             // However, if you require that BOTH motors have finished their moves before the robot continues
             // onto the next step, use (isBusy() || isBusy()) in the loop test.
-            while (opModeIsActive() && frontLeftMotor.isBusy()){
+            while (opModeIsActive() && frontLeftMotor.isBusy() && frontRightMotor.isBusy() && backLeftMotor.isBusy() && backRightMotor.isBusy()){
 
                 // Display it for the driver.
                 /*telemetry.addData("Path1",  "Running to %7d :%7d", newLeftTarget,  newRightTarget);
@@ -162,12 +215,18 @@ public class MecanumTest extends LinearOpMode {
             }
 
             // Stop all motion;
-
             frontLeftMotor.setPower(0);
+            backLeftMotor.setPower(0);
+            frontRightMotor.setPower(0);
+            backRightMotor.setPower(0);
+
             // Turn off RUN_TO_POSITION
             frontLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            backRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-            sleep(250);   // optional pause after each move
+            //  sleep(250);   // optional pause after each move
         }
     }
 }

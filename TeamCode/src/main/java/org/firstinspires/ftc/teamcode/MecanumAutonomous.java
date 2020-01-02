@@ -114,10 +114,10 @@ public class MecanumAutonomous extends LinearOpMode {
 
         // Send telemetry message to indicate successful Encoder reset
         telemetry.addData("Path0",  "Starting at %7d :%7d",
-                        frontLeftMotor.getCurrentPosition(),
-                        backLeftMotor.getCurrentPosition(),
-                        frontRightMotor.getCurrentPosition(),
-                        backRightMotor.getCurrentPosition());
+                frontLeftMotor.getCurrentPosition(),
+                backLeftMotor.getCurrentPosition(),
+                frontRightMotor.getCurrentPosition(),
+                backRightMotor.getCurrentPosition());
         telemetry.update();
 
         // Wait for the game to start (driver presses PLAY)
@@ -125,9 +125,8 @@ public class MecanumAutonomous extends LinearOpMode {
 
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
-        encoderDrive(DRIVE_SPEED,  48,  48, 5.0);  // S1: Forward 47 Inches with 5 Sec timeout
-        encoderDrive(TURN_SPEED,   12, -12, 4.0);  // S2: Turn Right 12 Inches with 4 Sec timeout
-        encoderDrive(DRIVE_SPEED, -24, -24, 4.0);  // S3: Reverse 24 Inches with 4 Sec timeout
+        encoderDrive(DRIVE_SPEED,  20,  90);
+        encoderDrive(DRIVE_SPEED,   -20, 90);
 
        /* robot.leftClaw.setPosition(1.0);            // S4: Stop and close the claw.
         robot.rightClaw.setPosition(0.0);*/
@@ -147,18 +146,19 @@ public class MecanumAutonomous extends LinearOpMode {
 
     public void encoderDrive(double speed,
                              double distance,
-                             double angle,
-                             double timeoutS) {
+                             double angle) {    //timeout eliminated
         int distanceXTarget;
         int distanceYTarget;
 
         double distXMotors;
         double distYMotors;
+
         double powerXMotors;
         double powerYMotors;
         //first quadrant
-        distXMotors = distance * Math.cos(Math.toRadians(angle));
-        distYMotors = distance * Math.sin(Math.toRadians(angle));
+        distXMotors = distance * Math.cos(Math.toRadians(angle)); //optional: -45
+        distYMotors = distance * Math.sin(Math.toRadians(angle)); //optional: -45
+
         if(angle > 0 && angle <= 90){
             powerXMotors = 1;
             powerYMotors = Math.sin(Math.toRadians(angle)) - Math.cos(Math.toRadians(angle));
@@ -171,12 +171,10 @@ public class MecanumAutonomous extends LinearOpMode {
             powerXMotors = -1;
             powerYMotors = Math.sin(Math.toRadians(angle)) - Math.cos(Math.toRadians(angle));
         }
-        else{
+        else {
             powerXMotors = Math.sin(Math.toRadians(angle)) + Math.cos(Math.toRadians(angle));
-            powerYMotors= -1;
+            powerYMotors = -1;
         }
-        distXMotors = distance * Math.cos(Math.toRadians(angle-45));
-        distYMotors = distance * Math.sin(Math.toRadians(angle-45));
 
 
         // Ensure that the opmode is still active
