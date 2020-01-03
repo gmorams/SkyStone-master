@@ -59,13 +59,14 @@ public class MecanumBasicPOV extends LinearOpMode {
     private DcMotor backLeftMotor = null;
     private DcMotor frontRightMotor = null;
     private DcMotor backRightMotor = null;
-    private DcMotor LeftIntake = null;
-    private DcMotor RightIntake = null;
+    private DcMotor leftIntake = null;
+    private DcMotor rightIntake = null;
 
 
     // operational constants
     double joyScale = 0.35; //Constant per suabitzar moviments joyestick
    //double motorMax = 0.6; // Limit motor power to this value for Andymark RUN_USING_ENCODER mode
+    int intakeState = 1; //1 per un sentit, -1 per l'altre.
 
 
     @Override
@@ -80,6 +81,7 @@ public class MecanumBasicPOV extends LinearOpMode {
         backLeftMotor = hardwareMap.get(DcMotor.class, "back_left_drive");
         frontRightMotor = hardwareMap.get(DcMotor.class, "front_right_drive");
         backRightMotor = hardwareMap.get(DcMotor.class, "back_right_drive");
+        leftIntake = hardwareMap.get(DcMotor.class, "left_intake");
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -88,14 +90,19 @@ public class MecanumBasicPOV extends LinearOpMode {
          backLeftMotor.setDirection(DcMotor.Direction.FORWARD);
          frontRightMotor.setDirection(DcMotor.Direction.REVERSE);
          backRightMotor.setDirection(DcMotor.Direction.REVERSE);
+         leftIntake.setDirection(DcMotor.Direction.FORWARD);
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
         runtime.reset();
 
         // run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
 
+        while (opModeIsActive()) {
+            if(gamepad1.y){
+                intakeState = intakeState*-1;
+                leftIntake.setPower(intakeState);
+            }
             // Setup a variable for each drive wheel to save power level for telemetry
             double y = gamepad1.left_stick_y * joyScale;
             double x = -gamepad1.left_stick_x * joyScale;
