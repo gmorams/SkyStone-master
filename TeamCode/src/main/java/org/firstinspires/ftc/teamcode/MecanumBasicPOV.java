@@ -59,6 +59,14 @@ public class MecanumBasicPOV extends LinearOpMode {
     private DcMotor backLeftMotor = null;
     private DcMotor frontRightMotor = null;
     private DcMotor backRightMotor = null;
+    private DcMotor LeftIntake = null;
+    private DcMotor RightIntake = null;
+
+
+    // operational constants
+    double joyScale = 0.35; //Constant per suabitzar moviments joyestick
+   //double motorMax = 0.6; // Limit motor power to this value for Andymark RUN_USING_ENCODER mode
+
 
     @Override
     public void runOpMode() {
@@ -69,9 +77,9 @@ public class MecanumBasicPOV extends LinearOpMode {
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
         frontLeftMotor = hardwareMap.get(DcMotor.class, "front_left_drive");
-        backLeftMotor = hardwareMap.get(DcMotor.class, "front_right_drive");
-        frontRightMotor = hardwareMap.get(DcMotor.class, "back_left_drive");
-        backRightMotor = hardwareMap.get(DcMotor.class, "front_right_drive");
+        backLeftMotor = hardwareMap.get(DcMotor.class, "back_left_drive");
+        frontRightMotor = hardwareMap.get(DcMotor.class, "front_right_drive");
+        backRightMotor = hardwareMap.get(DcMotor.class, "back_right_drive");
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -89,14 +97,16 @@ public class MecanumBasicPOV extends LinearOpMode {
         while (opModeIsActive()) {
 
             // Setup a variable for each drive wheel to save power level for telemetry
-            double y = -gamepad1.left_stick_y;
-            double x = gamepad1.left_stick_x;
-            double rx = gamepad1.right_stick_x;
+            double y = gamepad1.left_stick_y * joyScale;
+            double x = -gamepad1.left_stick_x * joyScale;
+            double rx = gamepad1.right_stick_x * joyScale;
 
-            double frontLeftPower = y + x + rx;
+            double frontLeftPower = y - x + rx; //Desplaçament a la dreta
+            double backRightPower = y - x - rx; //Desplaçament a l'esquerra
+
             double backLeftPower = y + x + rx;
             double frontRightPower = y + x - rx;
-            double backRightPower = y + x - rx;
+
             telemetry.addData("Motors", "X (%.2f), Y (%.2f)", x,y );
 
 
