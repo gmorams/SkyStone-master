@@ -83,6 +83,8 @@ public class MecanumAutonomous extends LinearOpMode {
     private DcMotor frontRightMotor = null;
     private DcMotor backRightMotor = null;
 
+    private double drive_SpeedFactor ;
+
     @Override
     public void runOpMode() {
 
@@ -90,16 +92,20 @@ public class MecanumAutonomous extends LinearOpMode {
         telemetry.addData("Status", "Resetting Encoders");    //
         telemetry.update();
 
-        frontLeftMotor = hardwareMap.get(DcMotor.class, "front_left_drive");
-        backLeftMotor = hardwareMap.get(DcMotor.class, "front_right_drive");
-        frontRightMotor = hardwareMap.get(DcMotor.class, "back_left_drive");
-        backRightMotor = hardwareMap.get(DcMotor.class, "front_right_drive");
+        //--> ! 03.01.20 Error en la declaració denoms . Es canviesn
 
+        frontLeftMotor = hardwareMap.get(DcMotor.class, "front_left_drive");
+        backLeftMotor = hardwareMap.get(DcMotor.class, "back_left_drive");
+        frontRightMotor = hardwareMap.get(DcMotor.class, "front_right_drive");
+        backRightMotor = hardwareMap.get(DcMotor.class, "back_right_drive");
+
+        //Resetegem els encoders
         frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         frontRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
+        //Connfigurem  encoders
         frontLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -109,15 +115,17 @@ public class MecanumAutonomous extends LinearOpMode {
         // Reverse the motor that runs backwards when connected directly to the battery
 
         frontLeftMotor.setDirection(DcMotor.Direction.FORWARD);
-        backLeftMotor.setDirection(DcMotor.Direction.FORWARD);
         frontRightMotor.setDirection(DcMotor.Direction.REVERSE);
+
+        backLeftMotor.setDirection(DcMotor.Direction.FORWARD);
         backRightMotor.setDirection(DcMotor.Direction.REVERSE);
 
         // Send telemetry message to indicate successful Encoder reset
         telemetry.addData("Path0",  "Starting at %7d :%7d",
                 frontLeftMotor.getCurrentPosition(),
-                backLeftMotor.getCurrentPosition(),
                 frontRightMotor.getCurrentPosition(),
+
+                backLeftMotor.getCurrentPosition(),
                 backRightMotor.getCurrentPosition());
         telemetry.update();
 
@@ -126,8 +134,12 @@ public class MecanumAutonomous extends LinearOpMode {
 
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
-        encoderDrive(DRIVE_SPEED,  20,  90);
-        encoderDrive(DRIVE_SPEED,   -20, 90);
+        //Reduim la velocitat del moviment
+
+
+        encoderDrive(DRIVE_SPEED,  50,  45);
+
+        //encoderDrive(DRIVE_SPEED,   -20, 90);
 
        /* robot.leftClaw.setPosition(1.0);            // S4: Stop and close the claw.
         robot.rightClaw.setPosition(0.0);*/
@@ -148,49 +160,68 @@ public class MecanumAutonomous extends LinearOpMode {
     public void encoderDrive(double speed,
                              double distance,
                              double angle) {    //timeout eliminated
-        int distanceXTarget;
-        int distanceYTarget;
+        int distanceXLTarget,distanceXRTarget;
+        int distanceYLTarget,distanceYRTarget;
 
         double distXMotors;
         double distYMotors;
 
         double powerXMotors;
         double powerYMotors;
+
+        //--> ! 03.01.20 s'hi suma 45º de les rodes Mecanum
+        //angle=angle+45;
         //first quadrant
         distXMotors = distance * Math.cos(Math.toRadians(angle)); //optional: -45
         distYMotors = distance * Math.sin(Math.toRadians(angle)); //optional: -45
 
         if(angle > 0 && angle <= 90){
-            powerXMotors = 1;
+            powerXMotors = -1;
             powerYMotors = Math.sin(Math.toRadians(angle)) - Math.cos(Math.toRadians(angle));
+            //powerYMotors = Math.sin(Math.toRadians(angle)) + Math.cos(Math.toRadians(angle));
+
         }
         else if(angle > 90 && angle <= 180){
             powerXMotors = Math.sin(Math.toRadians(angle)) + Math.cos(Math.toRadians(angle));
             powerYMotors = 1;
+
         }
         else if(angle > 180 && angle <= 270){
             powerXMotors = -1;
             powerYMotors = Math.sin(Math.toRadians(angle)) - Math.cos(Math.toRadians(angle));
+
         }
         else {
-            powerXMotors = Math.sin(Math.toRadians(angle)) + Math.cos(Math.toRadians(angle));
+            powerXMotors = Math.sin(Math.toRadians(angle)) - Math.cos(Math.toRadians(angle));
             powerYMotors = -1;
+
         }
 
+
+        powerXMotors =powerXMotors*DRIVE_SPEED*DRIVE_SPEED;
+        powerYMotors=powerYMotors*DRIVE_SPEED*DRIVE_SPEED;
 
         // Ensure that the opmode is still active
         if (opModeIsActive()) {
 
             // Determine new target position, and pass to motor controller
 
-            distanceXTarget = frontLeftMotor.getCurrentPosition() + (int)(distXMotors * COUNTS_PER_CM);
-            distanceYTarget = frontLeftMotor.getCurrentPosition() + (int)(distXMotors * COUNTS_PER_CM);
+            distanceXLTarget = frontLeftMotor.getCurrentPosition() - (int)(distXMotors * COUNTS_PER_CM);
+            distanceXRTarget = backRightMotor.getCurrentPosition() + (int)(distXMotors * COUNTS_PER_CM);
+            //--> ! 03.01.20 Error en la declararció distYMotors canviat: distXMotor --> distYMotors
+            distanceYLTarget = backLeftMotor.getCurrentPosition() - (int)(distYMotors * COUNTS_PER_CM);
+            distanceYRTarget = frontRightMotor.getCurrentPosition() + (int)(distYMotors * COUNTS_PER_CM);
+
+            //frontLeftMotor.setTargetPosition(distanceXTarget);
+
+            frontLeftMotor.setTargetPosition(distanceXLTarget);
+            backLeftMotor.setTargetPosition(distanceYLTarget);
+
+            //frontRightMotor.setTargetPosition(distanceXTarget);
+            frontRightMotor.setTargetPosition(distanceYRTarget);
+            backRightMotor.setTargetPosition(distanceXRTarget);
 
 
-            frontLeftMotor.setTargetPosition(distanceYTarget);
-            backLeftMotor.setTargetPosition(distanceXTarget);
-            frontRightMotor.setTargetPosition(distanceXTarget);
-            backRightMotor.setTargetPosition(distanceYTarget);
             // Turn On RUN_TO_POSITION
             frontLeftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             backLeftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -199,10 +230,17 @@ public class MecanumAutonomous extends LinearOpMode {
 
             // reset the timeout time and start motion.
             //  runtime.reset();
+            //--> ! 03.01.20 Error Canvi YYXY per YXXY
+
+
+
             frontLeftMotor.setPower(powerYMotors);
-            backLeftMotor.setPower(powerYMotors);
-            frontRightMotor.setPower(powerYMotors);
-            backRightMotor.setPower(powerXMotors);
+            frontRightMotor.setPower(powerXMotors);//0
+
+            backRightMotor.setPower(powerYMotors);
+            backLeftMotor.setPower(powerXMotors); //0
+
+
 
             // keep looping while we are still active, and there is time left, and both motors are running.
             // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
@@ -213,24 +251,27 @@ public class MecanumAutonomous extends LinearOpMode {
             while (opModeIsActive() && frontLeftMotor.isBusy() && frontRightMotor.isBusy() && backLeftMotor.isBusy() && backRightMotor.isBusy()){
 
                 // Display it for the driver.
-                /*telemetry.addData("Path1",  "Running to %7d :%7d", newLeftTarget,  newRightTarget);
+                telemetry.addData("Path1",  "Running to %7d :%7d", distanceXLTarget,  distanceXRTarget);
                 telemetry.addData("Path2",  "Running at %7d :%7d",
-                                            robot.leftDrive.getCurrentPosition(),
-                                            robot.rightDrive.getCurrentPosition());
-                telemetry.update();*/
-            }
+                        frontLeftMotor.getCurrentPosition(),
+                        backRightMotor.getCurrentPosition());
+                telemetry.update();
+                /*
+                //--> ! 03.01.20 Pendent de canviar i posar l'aturada dins del while
+                // Stop all motion;
+                frontLeftMotor.setPower(0);
+                backLeftMotor.setPower(0);
+                frontRightMotor.setPower(0);
+                backRightMotor.setPower(0); */
 
-            // Stop all motion;
-            frontLeftMotor.setPower(0);
-            backLeftMotor.setPower(0);
-            frontRightMotor.setPower(0);
-            backRightMotor.setPower(0);
+                // Turn off RUN_TO_POSITION
+                frontLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                backRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-            // Turn off RUN_TO_POSITION
-            frontLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            backRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            }  //--> ! 03.01.20 S'inclouen  l'stop all motion dins el while
 
             //  sleep(250);   // optional pause after each move
         }
