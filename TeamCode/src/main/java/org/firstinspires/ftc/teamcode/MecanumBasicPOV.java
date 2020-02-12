@@ -39,7 +39,7 @@ import com.qualcomm.robotcore.util.Range;
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
  * the autonomous or the teleop period of an FTC match. The names of OpModes appear on the menu
- * of the FTC Driver Station. When an selection is made from the menu, the corresponding OpMode
+ * of the FTC Driver Station. W60hen an selection is made from the menu, the corresponding OpMode
  * class is instantiated on the Robot Controller and executed.
  *
  * This particular OpMode just executes a basic Tank Drive Teleop for a two wheeled robot
@@ -60,13 +60,14 @@ public class MecanumBasicPOV extends LinearOpMode {
     private DcMotor frontRightMotor = null;
     private DcMotor backRightMotor = null;
     private DcMotor leftIntake = null;
-    private DcMotor rightIntake = null;
-
+    //private DcMotor rightIntake = null;
+    private DcMotor lift = null;
 
     // operational constants
-    double joyScale = 0.35; //Constant per suabitzar moviments joyestick
+    double joyScale = 0.65; //Constant per suabitzar moviments joyestick
    //double motorMax = 0.6; // Limit motor power to this value for Andymark RUN_USING_ENCODER mode
     int intakeState = 1; //1 per un sentit, -1 per l'altre.
+    double lift1State = 0.7; //1 per un sentit, -1 per l'altre.
 
 
     @Override
@@ -82,6 +83,7 @@ public class MecanumBasicPOV extends LinearOpMode {
         frontRightMotor = hardwareMap.get(DcMotor.class, "front_right_drive");
         backRightMotor = hardwareMap.get(DcMotor.class, "back_right_drive");
         leftIntake = hardwareMap.get(DcMotor.class, "left_intake");
+        lift = hardwareMap.get(DcMotor.class, "lift");
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -91,20 +93,33 @@ public class MecanumBasicPOV extends LinearOpMode {
          frontRightMotor.setDirection(DcMotor.Direction.REVERSE);
          backRightMotor.setDirection(DcMotor.Direction.REVERSE);
          leftIntake.setDirection(DcMotor.Direction.FORWARD);
+         // lift.setDirection(DcMotor.Direction.FORWARD);
 
-        // Wait for the game to start (driver presses PLAY)
+        // Wait for the game to start (driver presses PLAY
         waitForStart();
         runtime.reset();
 
         // run until the end of the match (driver presses STOP)
 
         while (opModeIsActive()) {
-            if(gamepad1.y){
+            if(gamepad2.y){
                 intakeState = intakeState*-1;
-                leftIntake.setPower(intakeState);
+                sleep(500);
             }
+            leftIntake.setPower(intakeState);
+
+            // LIFT PROGRAMMING
+//            if(gamepad2.a){
+//                lift1State = lift1State*-1;
+//                sleep(300);
+//            }
+//            if(gamepad2.b){
+//                lift.setPower(lift1State);
+//                sleep(300);
+//            }
+
             // Setup a variable for each drive wheel to save power level for telemetry
-            double y = gamepad1.left_stick_y * joyScale;
+            double y = -gamepad1.left_stick_y * joyScale;
             double x = -gamepad1.left_stick_x * joyScale;
             double rx = gamepad1.right_stick_x * joyScale;
 
