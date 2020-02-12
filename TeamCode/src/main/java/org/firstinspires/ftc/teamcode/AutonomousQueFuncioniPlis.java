@@ -20,7 +20,7 @@ public class AutonomousQueFuncioniPlis extends LinearOpMode{
     static final double TicksPercm = 537.6/(10*3.141592654);
     int ticksParellX = 0;
     int ticksParellY = 0;
-    double angle = 0;
+    double angle = 180;
     double distance = 60;
 
     public void runOpMode() {
@@ -43,8 +43,8 @@ public class AutonomousQueFuncioniPlis extends LinearOpMode{
         frontRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        ticksParellX = (int)(distance*TicksPercm*Math.cos(angle));
-        ticksParellY = (int)(distance*TicksPercm*Math.sin(angle));
+        ticksParellX = (int)(distance*TicksPercm/(2*Math.cos(angle)));
+        ticksParellY = (int)(distance*TicksPercm/(2*Math.sin(angle)));
         do {
             sleep(10);
         }while(!opModeIsActive());
