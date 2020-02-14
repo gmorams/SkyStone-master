@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import java.lang.*;
 
 @Autonomous(name="Mecanum Autonomous Limited", group="Pushbot")
 public class MecanumAutonomous_limited extends LinearOpMode{
@@ -12,12 +13,17 @@ public class MecanumAutonomous_limited extends LinearOpMode{
     private DcMotor backRightMotor = null;
 
 
-
     static final double TicksPercm = 537.6/(10*3.141592654);
+    long first_millis = 0;
     int ticksParellX = 0;
     int ticksParellY = 0;
     double powerParellX=0;
     double powerParellY=0;
+
+    int targetedPosBL=0;
+    int targetedPosBR=0;
+    int targetedPosFL=0;
+    int targetedPosFR=0;
 
     public void runOpMode() {
 
@@ -103,10 +109,14 @@ public class MecanumAutonomous_limited extends LinearOpMode{
 
         if (opModeIsActive()) {
 
-            backLeftMotor.setTargetPosition(backLeftMotor.getCurrentPosition()+ticksParellX);
-            frontRightMotor.setTargetPosition(frontRightMotor.getCurrentPosition()+ticksParellX);
-            backRightMotor.setTargetPosition(backRightMotor.getCurrentPosition()+ticksParellY);
-            frontLeftMotor.setTargetPosition(frontLeftMotor.getCurrentPosition()+ticksParellY);
+            targetedPosBL=backLeftMotor.getCurrentPosition()+ticksParellX;
+            targetedPosBR=backRightMotor.getCurrentPosition()+ticksParellY;
+            targetedPosFL=frontLeftMotor.getCurrentPosition()+ticksParellY;
+            targetedPosFR=frontRightMotor.getCurrentPosition()+ticksParellX;
+            backLeftMotor.setTargetPosition(targetedPosBL);
+            frontRightMotor.setTargetPosition(targetedPosFR);
+            backRightMotor.setTargetPosition(targetedPosBR);
+            frontLeftMotor.setTargetPosition(targetedPosFL);
 
             frontLeftMotor.setPower(power);
             frontRightMotor.setPower(power);//0
@@ -119,9 +129,19 @@ public class MecanumAutonomous_limited extends LinearOpMode{
             backRightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
 
+
             while (opModeIsActive() && frontLeftMotor.isBusy() || frontRightMotor.isBusy() || backLeftMotor.isBusy() || backRightMotor.isBusy()){
 
-                // Display it for the driver.
+                if( backLeftMotor.getCurrentPosition() >= targetedPosBL-20 && backLeftMotor.getCurrentPosition() < targetedPosBL+20 &&
+                    backRightMotor.getCurrentPosition() >= targetedPosBR-20 && backRightMotor.getCurrentPosition() < targetedPosBR+20 &&
+                    frontLeftMotor.getCurrentPosition() >= targetedPosFL-20 && frontLeftMotor.getCurrentPosition() < targetedPosFL+20 &&
+                    frontRightMotor.getCurrentPosition() >= targetedPosFR-20 && frontRightMotor.getCurrentPosition() < targetedPosFR+20){
+                    telemetry.addData("State",  "CALIBRANDOOO");
+                    first_millis = System.currentTimeMillis();
+                }
+                else telemetry.addData("State",  "MOVIENDOO");
+
+            // Displa it for the driver.
                 telemetry.addData("Path2",  "Running at %7d :%7d",
                         frontLeftMotor.getCurrentPosition(),
                         backRightMotor.getCurrentPosition());
@@ -136,7 +156,6 @@ public class MecanumAutonomous_limited extends LinearOpMode{
 
 
             }
-
             // Turn off RUN_TO_POSITION
             frontLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
